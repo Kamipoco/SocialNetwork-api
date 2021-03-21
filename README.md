@@ -1,1 +1,2 @@
-# SocialNetwork-api
+# SocialNetwork
+# Start server: "npm start"
