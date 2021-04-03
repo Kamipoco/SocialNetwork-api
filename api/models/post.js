@@ -2,11 +2,11 @@ const mongoose = require('mongoose');
 const {ObjectId} = mongoose.Schema.Types;
 
 const postSchema = new mongoose.Schema({
-    title: {
+    hashtag: { //hashtag
         type: String,
         required: true
     },
-    body: {
+    content: { //content
         type: String,
         required: true
     },
@@ -28,11 +28,7 @@ const postSchema = new mongoose.Schema({
     postedBy: {
         type: ObjectId,
         ref: "User"
-    },
-    created_at: {
-        type: Date,
-        default: Date.now()
     }
-});
+},{timestamps: true});
 
 mongoose.model("Post", postSchema);

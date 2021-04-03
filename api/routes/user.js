@@ -18,11 +18,13 @@ function getUsers(res) {                             //Chú ý khi get tất c�
     });
 }
 
-router.get('/getAllUser', requireLogin, (req, res) => {  //Lấy tất cả user
+//Lấy tất cả user
+router.get('/getAllUser', requireLogin, (req, res) => {  
     getUsers(res);
-})
+});
 
-router.get('/user/:id', requireLogin, (req, res) => {  //Chi tiết user
+//Chi tiết user theo id
+router.get('/user/:id', requireLogin, (req, res) => {  
     User.findOne({_id: req.params.id})
     .select("-password")
     .then(user => {
@@ -38,9 +40,31 @@ router.get('/user/:id', requireLogin, (req, res) => {  //Chi tiết user
     .catch(err => {
         return res.status(404).json({error: "User not found"});
     })
-})
+});
 
-router.put('/follow', requireLogin, (req, res) => { //Theo dõi user
+//B1:trước tiên từ username truyền lên ta phải tìm ra _id của người đó 
+//B2: xong từ _id ta lấy bài viết thông qua (_id)
+router.get('/users/:username', requireLogin, async (req, res) => {
+    try {
+        const user = await User.findOne({ username: req.params.username });
+        const idUsername = user._id;
+        console.log(idUsername);
+        console.log(user);
+        Post.findOne({postedBy: idUsername})
+        .populate('postedBy', '_id name username avatarUrl') 
+        .populate("comments.postedBy", "_id name avatarUrl")
+        .then((posts) => {
+            res.status(200).json({posts, user});
+        }).catch((err) => {
+            res.status(404).json({error: err});
+        });
+       } catch (err) {
+        res.json({ error: err.message || err.toString() });
+       }
+});
+
+//Theo dõi user
+router.put('/follow', requireLogin, (req, res) => { 
     User.findByIdAndUpdate(req.body.followId, {
         $push: {followers: req.user._id}
     }, {
@@ -60,7 +84,8 @@ router.put('/follow', requireLogin, (req, res) => { //Theo dõi user
     })
 })
 
-router.put('/unfollow', requireLogin, (req, res) => { //Bỏ theo dõi
+//Bỏ theo dõi
+router.put('/unfollow', requireLogin, (req, res) => { 
     User.findByIdAndUpdate(req.body.unfollowId, {
         $pull: {followers: req.user._id}
     }, {
@@ -81,17 +106,19 @@ router.put('/unfollow', requireLogin, (req, res) => { //Bỏ theo dõi
     })
 })
 
-router.put('/updatepic', requireLogin, (req, res) => { //Cập nhật avatar và lưu vào DB
-    User.findByIdAndUpdate(req.user._id, {$set: {pic: req.body.pic}}, {new: true},
+//Cập nhật avatar và lưu vào DB
+router.put('/updatepic', requireLogin, (req, res) => { 
+    User.findByIdAndUpdate(req.user._id, {$set: {avatarUrl: req.body.avatarUrl}}, {new: true},
         (err, result) => {
             if(err) {
                 return res.status(422).json({error: "Pic can not post"});
             }
             res.status(200).json(result);
     })
-})
+});
 
-router.patch('/changePassword/:id', requireLogin, async (req, res, next) => {  //Đổi mật khẩu user
+//Đổi mật khẩu user
+router.patch('/changePassword/:id', requireLogin, async (req, res, next) => {  
     //Kiểm tra user nhập vào pass cũ có đúng ko
     //Nếu đúng thì mới cho nhập mật khẩu mới
 
@@ -110,7 +137,7 @@ router.patch('/changePassword/:id', requireLogin, async (req, res, next) => {  /
     }
 });
 
-//Search user(Done)
+//Search user
 router.get('/search-users', requireLogin, (req, res) => {
     const fieldSearch = req.query.name;
 
@@ -125,7 +152,10 @@ router.get('/search-users', requireLogin, (req, res) => {
 
 //Update infor of user
 router.put('/editProfile/:id', requireLogin, (req, res) => {
-    if(!req.body) {
+
+    const {name, username, email, avatarUrl, bio} = req.body;
+
+    if(!name || !username || !email || !avatarUrl || !bio) {
         return res.status(400).send({
             message: "Data to update can not be empty!"
         });
@@ -134,9 +164,10 @@ router.put('/editProfile/:id', requireLogin, (req, res) => {
 
     User.findByIdAndUpdate(id, {
         name: req.body.name,
+        username: req.body.username,
         email: req.body.email,
-        pic: req.body.pic,
-        description: req.body.description
+        avatarUrl: req.body.avatarUrl,
+        bio: req.body.bio
     }, {new: true})
     .then(data => {
         if(!data) {

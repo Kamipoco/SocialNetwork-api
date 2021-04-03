@@ -5,10 +5,12 @@ const { route } = require('./auth');
 const requireLogin = require('../middleware/requireLogin');
 const Post = mongoose.model("Post");
 
-router.get('/allPost', requireLogin,(req,res) => {  //Hiển thị tất cả bài đăng
+//Hiển thị tất cả bài đăng
+router.get('/allPost', requireLogin,(req,res) => {   
     Post.find()
-        .populate('postedBy', '_id name pic')    //populate đc hiểu là nếu postedBy(Post) = _id(User) thì posts có thể lấy dữ liệu của bên db users
-        .populate("comments.postedBy", "_id name pic")
+        .populate('postedBy', '_id name username avatarUrl')    //populate đc hiểu là nếu postedBy(Post) = _id(User) thì posts có thể lấy dữ liệu của bên db users
+        .populate("comments.postedBy", "_id name avatarUrl")
+        .sort('-createdAt')
         .then((posts, users) => {
             res.status(200).json({posts, users});
         }).catch((err) => {
@@ -16,21 +18,9 @@ router.get('/allPost', requireLogin,(req,res) => {  //Hiển thị tất cả b�
         });
 });
 
-// router.get('/postDetail/:id', requireLogin, (req, res) => { //DATA NULL
-//     var _id = req.params._id;
-//     Post.find({ _id: _id})
-//         .populate('postedBy', '_id name')
-//         .then((posts, users) => {
-//             res.status(200).json({posts, users});
-//         })
-//         .catch((err) => {
-//             res.status(404).json({error: err});
-//         })
-// });
-
 router.get('/likePost', (req, res) => {
     Post.find()
-        .populate('postedBy', '_id name pic')
+        .populate('postedBy', '_id name username avatarUrl')
         .populate("likes")
         .then( (posts, users) => {
             res.status(200).json({posts, users})
@@ -38,24 +28,27 @@ router.get('/likePost', (req, res) => {
         .catch( (err) => {
             console.log(err);
         });
-})
+});
 
-router.get('/post/:id', requireLogin, (req, res) => {  //Chi tiết bài viết
+//Chi tiết bài viết
+router.get('/post/:id', requireLogin, (req, res) => {  
     Post.findById({_id: req.params.id})
-    .populate('postedBy', '_id name pic') 
-    .populate("comments.postedBy", "_id name pic")
+    .populate('postedBy', '_id name username avatarUrl') 
+    .populate("comments.postedBy", "_id name avatarUrl")
     .then((posts) => {
         res.status(200).json({posts});
     }).catch((err) => {
         res.status(404).json({error: err});
     });
         
-})
+});
 
-router.get('/getSubpost', requireLogin,(req,res) => {  //Hiển thị các bài đăng của người mình đã theo dõi
+//Hiển thị các bài đăng của người mình đã theo dõi
+router.get('/getSubpost', requireLogin,(req,res) => {  
     Post.find({ postedBy: {$in: req.user.following}})
-        .populate('postedBy', '_id name pic')
-        .populate("comments.postedBy", "_id name pic")
+        .populate('postedBy', '_id name username avatarUrl')
+        .populate("comments.postedBy", "_id name avatarUrl")
+        .sort('-createdAt')
         .then((posts) => {
             res.status(200).json({posts});
         }).catch((err) => {
@@ -63,18 +56,19 @@ router.get('/getSubpost', requireLogin,(req,res) => {  //Hiển thị các bài 
         });
 });
 
-router.post('/createPost', requireLogin, (req, res) => { //Tạo bài đăng
-    const {title, body, pic} = req.body;
-    if(!title || !body || !pic && pic != null) {
-        return res.status(422).json({error: "Please add all the field"});
+//Tạo bài đăng
+router.post('/createPost', requireLogin, (req, res) => { 
+    const {hashtag, content, photo} = req.body;
+    if(!hashtag || !content || !photo) {
+        return res.status(422).json({errors: "Please add all the field"});
     }
-    // console.log(req.user);
-    // res.send('oke');
-    // req.user.password = undefined;
+    console.log(req.user);
+
     const post = new Post({
-        title,
-        body,
-        photo: pic,
+        hashtag,
+        content,
+        // photo: avatarUrl,
+        photo,
         postedBy: req.user
     });
     post.save()
@@ -85,9 +79,11 @@ router.post('/createPost', requireLogin, (req, res) => { //Tạo bài đăng
         });
 });
 
-router.get('/myPost', requireLogin, (req, res) => { //Hiển thị bài đăng của chính mình
+//Profile
+//Hiển thị bài đăng của chính mình(_id của ng đăng nhập(user))
+router.get('/myPost', requireLogin, (req, res) => { 
     Post.find({postedBy: req.user._id})
-        .populate("PostedBy", "_id name")
+        .populate("PostedBy", "_id name username avatarUrl")
         .then((mypost) => {
             res.status(200).json({mypost});
         })
@@ -96,14 +92,15 @@ router.get('/myPost', requireLogin, (req, res) => { //Hiển thị bài đăng c
         });
 });
 
-router.put('/like', requireLogin, (req, res) => { //Like bài đăng
+//Like bài đăng
+router.put('/like', requireLogin, (req, res) => { 
     Post.findByIdAndUpdate(req.body.postId, {
         $push: {likes: req.user._id}
     }, {
         new: true
     })
     .populate("comments.postedBy", "_id name")
-    .populate("postedBy", "_id name pic")
+    .populate("postedBy", "_id name username avatarUrl")
     .exec((err, result) => {
         if(err) {
             return res.status(422).json({error: err});
@@ -113,14 +110,15 @@ router.put('/like', requireLogin, (req, res) => { //Like bài đăng
     })
 });
 
-router.put('/unlike', requireLogin, (req, res) => { //Bỏ like bài đăng
+//Bỏ like bài đăng
+router.put('/unlike', requireLogin, (req, res) => { 
     Post.findByIdAndUpdate(req.body.postId, {
         $pull: {likes: req.user._id}
     }, {
         new: true
     })
-    .populate("comments.postedBy", "_id name pic")
-    .populate("postedBy", "_id name")
+    .populate("comments.postedBy", "_id name avatarUrl")
+    .populate("postedBy", "_id name username avatarUrl")
     .exec((err, result) => {
         if(err) {
             return res.status(422).json({error: err});
@@ -130,7 +128,8 @@ router.put('/unlike', requireLogin, (req, res) => { //Bỏ like bài đăng
     })
 });
 
-router.put('/comment', requireLogin, (req, res) => { //Bình luận bài viết
+//Bình luận bài viết
+router.put('/comment', requireLogin, (req, res) => { 
     const comment = { 
         text: req.body.text,
         postedBy: req.user._id
@@ -142,7 +141,7 @@ router.put('/comment', requireLogin, (req, res) => { //Bình luận bài viết
         new: true
     })
     .populate("comments.postedBy", "_id name")
-    .populate("postedBy", "_id name pic")
+    .populate("postedBy", "_id name username avatarUrl")
     .exec((err, result) => {
         if(err) {
             return res.status(422).json({error: err});
@@ -152,7 +151,8 @@ router.put('/comment', requireLogin, (req, res) => { //Bình luận bài viết
     })
 });
 
-router.delete('/deletePost/:postId', requireLogin,(req, res) => { //Xóa bài viết của chính mình
+//Xóa 1 bài viết của chính mình
+router.delete('/deletePost/:postId', requireLogin,(req, res) => { 
     Post.findOne({_id: req.params.postId})
     .populate("postedBy", "_id")
     .exec((err, post) => {
@@ -161,14 +161,27 @@ router.delete('/deletePost/:postId', requireLogin,(req, res) => { //Xóa bài vi
         }
         if(post.postedBy._id.toString() === req.user._id.toString()) {
             post.remove()
-            .then(result => {
-                res.status(200).json(result)
-            }).catch(err => {
+            .then((result) => {
+                res.status(200).json({status: 200, message: "Successfully deleted the post!"})
+            }).catch((err) => {
                 console.log(err);
             })
         }
     })
-})
+});
+
+//Xóa tất cả bài đăng của chính mình
+// router.delete('/deleteAllMyPost/:id', requireLogin, (req, res) => { 
+//     const userid = req.params.id;
+//     Post.find({_id: userid})
+//         .remove()
+//         .then((mypost) => {
+//             res.status(200).json({status: 200, message: "Delete Successfully!"});
+//         })
+//         .catch((err) => {
+//             console.log(err);
+//         });
+// });
 
 
 module.exports = router;
