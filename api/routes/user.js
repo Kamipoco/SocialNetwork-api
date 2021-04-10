@@ -13,7 +13,7 @@ function getUsers(res) {                             //Chú ý khi get tất c�
         if(err) {
             res.status(500).json(err);
         } else {
-            res.status(200).json(users);
+            res.status(200).json({status: 200, message: "Success", data: {users}});
         }
     });
 }
@@ -34,7 +34,7 @@ router.get('/user/:id', requireLogin, (req, res) => {
             if(err) {
                 return res.status(422).json({error: err})
             }
-            res.status(200).json({user, posts})
+            res.status(200).json({status: 200, message: "Success", data: {user, posts}});
         })
     })
     .catch(err => {
@@ -47,14 +47,14 @@ router.get('/user/:id', requireLogin, (req, res) => {
 router.get('/users/:username', requireLogin, async (req, res) => {
     try {
         const user = await User.findOne({ username: req.params.username });
-        const idUsername = user._id;
-        console.log(idUsername);
-        console.log(user);
+        const idUsername = user._id; //lấy _id của username được truyền qua params sau đó từ _id lấy posts của ng đó
+        // console.log(idUsername);
+        // console.log(user);
         Post.findOne({postedBy: idUsername})
         .populate('postedBy', '_id name username avatarUrl') 
         .populate("comments.postedBy", "_id name avatarUrl")
         .then((posts) => {
-            res.status(200).json({posts, user});
+            res.status(200).json({status: 200, message: "Success", data: {posts, user}});
         }).catch((err) => {
             res.status(404).json({error: err});
         });
@@ -76,13 +76,13 @@ router.put('/follow', requireLogin, (req, res) => {
         User.findByIdAndUpdate(req.user._id, {
             $push: {following: req.body.followId}
         }, {new: true}).select("-password").then(result => {
-            res.json(result)
+            res.json(result);
         }).catch(err => {
             return res.status(422).json({error: err})
         })
 
     })
-})
+});
 
 //Bỏ theo dõi
 router.put('/unfollow', requireLogin, (req, res) => { 
@@ -104,16 +104,21 @@ router.put('/unfollow', requireLogin, (req, res) => {
         })
         
     })
-})
+});
 
 //Cập nhật avatar và lưu vào DB
-router.put('/updatepic', requireLogin, (req, res) => { 
+router.put('/updateAvatarUrl', requireLogin, (req, res) => { 
+    const pic = req.body.avatarUrl;
+
+    if(!pic || pic === null) { //Kiểm tra data đầu vào
+        return res.status(422).json({ status: false, error: "Data can not null"});
+    }
     User.findByIdAndUpdate(req.user._id, {$set: {avatarUrl: req.body.avatarUrl}}, {new: true},
         (err, result) => {
             if(err) {
-                return res.status(422).json({error: "Pic can not post"});
+                return res.status(422).json({error: "avatarUrl can not post"});
             }
-            res.status(200).json(result);
+            res.status(200).json({status: 200, message: "Update Success", data: {result}});
     })
 });
 
@@ -125,12 +130,15 @@ router.patch('/changePassword/:id', requireLogin, async (req, res, next) => {
     try {
         var _id = req.params.id;
         // var password = req.body.password;
+        if(!password || password === null) {
+            return res.status(422).json({status: 422, error: "you must fill out the field completely"});
+        }
 
         const salt = await bcrypt.genSalt(10);
         const password = await bcrypt.hash(req.body.password, salt);
         const userPassword = await User.findByIdAndUpdate({ _id: _id }, { password: password }, { new: true });
 
-        return res.status(200).json({status: true, data: userPassword});
+        return res.status(200).json({status: 200, message: "Password changed successfully!"});
 
     } catch (error) {
         return res.status(400).json({status: false, error: error});
@@ -141,9 +149,17 @@ router.patch('/changePassword/:id', requireLogin, async (req, res, next) => {
 router.get('/search-users', requireLogin, (req, res) => {
     const fieldSearch = req.query.name;
 
+    if(!fieldSearch || fieldSearch.length === 0) {
+        return res.status(422).json({status: false, message: "Please fill in all fields"});
+    }
+
     User.find({name: {$regex: fieldSearch, $options: '$i'}})
         .then((users) => {
-            res.status(200).json({users});
+            console.log(users);
+            if(!users || users === null || users == "") {
+                return res.status(404).json({status: 404, message: "Not Found!"});
+            }
+            res.status(200).json({status: 200, message: "Successful Search!", data: {users}});
         })
         .catch((err) => {
             res.status(404).json({status: false, error: err});

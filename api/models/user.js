@@ -26,7 +26,7 @@ const userSchema = new mongoose.Schema({
     expireToken: Date,
     avatarUrl: {
         type: String,
-        default: "https://res.cloudinary.com/aloapp/image/upload/v1610380920/mlt0h7o7snls0mocswsu.jpg"
+        default: "https://res.cloudinary.com/aloapp/image/upload/v1617867174/images_tmzpno.png"
     },
     bio: { //mô tả bản thân
         type: String,

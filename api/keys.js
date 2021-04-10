@@ -1,6 +1,9 @@
 module.exports = {
     MongoUrl: "mongodb+srv://Lam:01676891120@cluster0.fndmh.mongodb.net/insta?retryWrites=true&w=majority",
     JWT_SECRET: "effqweasdjkwqiulaksqdasd",
-    api_key: "156c70f0355b54967106eb828b253b49-b6d086a8-21b5c20c",
-    DOMAIN: "sandboxc8c4f91f249c438aa54e72bd95c0bf01.mailgun.org"
+    api_key: "***", //(mailgun) private
+    DOMAIN: "sandboxb6b316b1d29a437fa0dc739bf7879c54.mailgun.org",
+    cloud_name: "aloapp"
+    // API_Key: "212597187267343", //(cloudinary)
+    // api_secret: "QgvjYAQUA8bYSz3xuFrodekdiII"
 }

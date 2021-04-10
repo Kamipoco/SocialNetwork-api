@@ -58,7 +58,7 @@ router.post('/signup', (req, res) => {
                                 }
                                 console.log(body);
                             });
-                            res.status(200).json({status: 200, message: "Saved Successfully!"})
+                            res.status(200).json({status: 200, message: "Saved successfully, Please heck your email"})
 
                     })
                     .catch((err) => {                        
@@ -131,16 +131,6 @@ router.post('/reset-password', (req, res) => {
                             console.log(err);
                             return res.status(500).json({error: err});
                         });
-                        
-                        // transporter.sendMail({
-                        //     to:result.email,
-                        //     from: "no-reply@insta.com",
-                        //     subject: "Reset password",
-                        //     html: `
-                        //     <p>You requested for password reset</p>
-                        //     <h5>Click in this <a href="http://localhost:3000/reset/${token}">Link</a>to reset password</h5>
-                        //     `
-                        // })
                         
                     })
             })

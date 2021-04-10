@@ -6,29 +6,62 @@ const requireLogin = require('../middleware/requireLogin');
 const Post = mongoose.model("Post");
 
 //Hiển thị tất cả bài đăng
-router.get('/allPost', requireLogin,(req,res) => {   
-    Post.find()
-        .populate('postedBy', '_id name username avatarUrl')    //populate đc hiểu là nếu postedBy(Post) = _id(User) thì posts có thể lấy dữ liệu của bên db users
-        .populate("comments.postedBy", "_id name avatarUrl")
-        .sort('-createdAt')
-        .then((posts, users) => {
-            res.status(200).json({posts, users});
-        }).catch((err) => {
-            res.status(404).json({error: err});
-        });
+// router.get('/allPost', requireLogin,(req,res) => {   
+
+//     Post.find()
+//         .populate('postedBy', '_id name username avatarUrl')    //populate đc hiểu là nếu postedBy(Post) = _id(User) thì posts có thể lấy dữ liệu của bên db users
+//         .populate("comments.postedBy", "_id name avatarUrl")
+//         .sort('-createdAt')
+//         .then((posts, users) => {
+//             res.status(200).json({ status: 200, message: "Success", data:  {posts, users}});
+//         }).catch((err) => {
+//             res.status(500).json({error: err});
+//         });
+// });
+
+//Implement Infinite Scroll Post
+router.get('/allPost', requireLogin, async (req,res) => {   
+    const {pageNumber} = req.query;
+    const number = Number(pageNumber);
+    const size = 8;
+
+    try {
+        let posts;
+
+        if(number === 1) {
+            posts = await Post.find()
+                .limit(size)
+                .sort('-createdAt')
+                .populate('postedBy', '_id name username avatarUrl')
+                .populate("comments.postedBy", "_id name avatarUrl")
+        } else {
+            const skips = size*(number - 1);
+            posts = await Post.find()
+                .skip(skips)
+                .limit(size)
+                .sort('-createdAt')
+                .populate('postedBy', '_id name username avatarUrl')
+                .populate("comments.postedBy", "_id name avatarUrl")
+        }
+
+        return res.status(200).json({status: 200, message: "Success", data: {posts}});
+    } catch (error) {
+        return res.status(500).send("Server error");
+    }
 });
 
-router.get('/likePost', (req, res) => {
-    Post.find()
-        .populate('postedBy', '_id name username avatarUrl')
-        .populate("likes")
-        .then( (posts, users) => {
-            res.status(200).json({posts, users})
-        })
-        .catch( (err) => {
-            console.log(err);
-        });
-});
+//Hiển thị những bài đăng mà mình đã yêu thích
+// router.get('/likePost', (req, res) => {
+//     Post.find()
+//         .populate('postedBy', '_id name username avatarUrl')
+//         .populate("likes")
+//         .then( (posts, users) => {
+//             res.status(200).json({ status: 200, message: "Success", data:  {posts, users}})
+//         })
+//         .catch( (err) => {
+//             res.status(500).json({status: false, error: err});
+//         });
+// });
 
 //Chi tiết bài viết
 router.get('/post/:id', requireLogin, (req, res) => {  
@@ -36,7 +69,7 @@ router.get('/post/:id', requireLogin, (req, res) => {
     .populate('postedBy', '_id name username avatarUrl') 
     .populate("comments.postedBy", "_id name avatarUrl")
     .then((posts) => {
-        res.status(200).json({posts});
+        res.status(200).json({status: 200, message: "Success", data: {posts}});
     }).catch((err) => {
         res.status(404).json({error: err});
     });
@@ -50,10 +83,10 @@ router.get('/getSubpost', requireLogin,(req,res) => {
         .populate("comments.postedBy", "_id name avatarUrl")
         .sort('-createdAt')
         .then((posts) => {
-            res.status(200).json({posts});
+            res.status(200).json({status: 200, message: "Success", data: {posts}});
         }).catch((err) => {
-            console.log(err);
-        });
+            res.status(500).json({status: false, error: err});
+        }); 
 });
 
 //Tạo bài đăng
@@ -72,8 +105,8 @@ router.post('/createPost', requireLogin, (req, res) => {
         postedBy: req.user
     });
     post.save()
-        .then((result) => {
-            res.status(200).json({ status: 200, message: 'Created Post Successfully!', post: result });
+        .then((post) => {
+            res.status(200).json({ status: 200, message: 'Created Post Successfully!', data: {post} });
         }).catch((err) => {
             res.status(422).json({error: err});
         });
@@ -85,10 +118,10 @@ router.get('/myPost', requireLogin, (req, res) => {
     Post.find({postedBy: req.user._id})
         .populate("PostedBy", "_id name username avatarUrl")
         .then((mypost) => {
-            res.status(200).json({mypost});
+            res.status(200).json({status: 200, message: "Success", data: {mypost}});
         })
         .catch((err) => {
-            console.log(err);
+            res.status(500).json({status: false, error: err});
         });
 });
 
@@ -105,7 +138,7 @@ router.put('/like', requireLogin, (req, res) => {
         if(err) {
             return res.status(422).json({error: err});
         } else {
-            res.status(200).json(result);
+            res.status(200).json({status: 200, message: "Success", data: result});
         }
     })
 });
@@ -123,7 +156,7 @@ router.put('/unlike', requireLogin, (req, res) => {
         if(err) {
             return res.status(422).json({error: err});
         } else {
-            res.status(200).json(result);
+            res.status(200).json({status: 200, message: "Success", data: result});
         }
     })
 });
@@ -146,10 +179,13 @@ router.put('/comment', requireLogin, (req, res) => {
         if(err) {
             return res.status(422).json({error: err});
         } else {
-            res.status(200).json(result);
+            res.status(200).json({status: 200, message: "Success", data: result});
         }
     })
 });
+
+//Xóa comment
+//Sửa comment
 
 //Xóa 1 bài viết của chính mình
 router.delete('/deletePost/:postId', requireLogin,(req, res) => { 
@@ -164,7 +200,7 @@ router.delete('/deletePost/:postId', requireLogin,(req, res) => {
             .then((result) => {
                 res.status(200).json({status: 200, message: "Successfully deleted the post!"})
             }).catch((err) => {
-                console.log(err);
+                res.status(500).json({error: err});
             })
         }
     })

@@ -32,6 +32,7 @@ app.use(bodyParser.urlencoded({ extended: true })); //chấp nhận mọi kiểu
 
 require('./models/user'); //Tạo các schema để có thể làm việc 
 require('./models/post');
+require('./models/chatModel');
 
 app.use(morgan('dev')); //log ra các trạng thái của API và thời gian phản hồi
 app.use(helmet()); //Lọc các dữ liệu người dùng gửi lên server tránh DDOS, XSS,...
