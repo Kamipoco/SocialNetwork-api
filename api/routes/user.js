@@ -122,26 +122,31 @@ router.put('/updateAvatarUrl', requireLogin, (req, res) => {
     })
 });
 
-//Đổi mật khẩu user
-router.patch('/changePassword/:id', requireLogin, async (req, res, next) => {  
-    //Kiểm tra user nhập vào pass cũ có đúng ko
-    //Nếu đúng thì mới cho nhập mật khẩu mới
-
+//Đổi mật khẩu user 
+router.post('/settings/password', requireLogin, async (req, res) => {
     try {
-        var _id = req.params.id;
-        // var password = req.body.password;
-        if(!password || password === null) {
-            return res.status(422).json({status: 422, error: "you must fill out the field completely"});
+        const { currentPassword, newPassword } = req.body;
+
+        if(!newPassword || newPassword == "") {
+            return res.status(401).json({status: 401, message: "Pass can not null"});
         }
 
-        const salt = await bcrypt.genSalt(10);
-        const password = await bcrypt.hash(req.body.password, salt);
-        const userPassword = await User.findByIdAndUpdate({ _id: _id }, { password: password }, { new: true });
+        const userInfor = await User.findById(req.user._id).select("+password");
 
-        return res.status(200).json({status: 200, message: "Password changed successfully!"});
+        const isPassword = await bcrypt.compareSync(currentPassword, userInfor.password);
+
+        if(isPassword === false || !isPassword) {
+            return res.status(401).json({status: 401, message: "Invalid Password!"});
+        }
+
+        userInfor.password = await bcrypt.hash(newPassword, 12);
+        await userInfor.save();
+
+        return res.status(200).json({status: 200, message: "Success!"});
 
     } catch (error) {
-        return res.status(400).json({status: false, error: error});
+        console.log(error);
+        return res.status(500).json({status: 500, message: "Server error!"})
     }
 });
 
