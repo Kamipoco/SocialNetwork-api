@@ -4,6 +4,9 @@ const mongoose = require('mongoose');
 const { route } = require('./auth');
 const requireLogin = require('../middleware/requireLogin');
 const Post = mongoose.model("Post");
+const user_controller = require('../controllers/user.controller');
+const multer = require('multer');
+const upload  = require('../helper/helper').upload;
 
 //Hiển thị tất cả bài đăng
 // router.get('/allPost', requireLogin,(req,res) => {   
@@ -111,6 +114,27 @@ router.post('/createPost', requireLogin, (req, res) => {
             res.status(422).json({error: err});
         });
 });
+
+//Tạo bài đăng
+let storage = multer.diskStorage({
+    destination: function (req, file, callback) {
+        console.log("file" + file);
+        callback(null, "./Uploads/");
+    },
+    filename: function (req, file, callback) {
+        callback(null, file.originalname);
+    }
+});
+let maxSize = 1000000 * 1000;
+let uploadMul = multer({
+    storage: storage,
+    limits: {
+        fileSize: maxSize
+    }
+});
+//Create Post
+router.post("/create", requireLogin, uploadMul.array("photo",6), user_controller.create);
+
 
 //Profile
 //Hiển thị bài đăng của chính mình(_id của ng đăng nhập(user))

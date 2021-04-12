@@ -110,7 +110,7 @@ router.put('/unfollow', requireLogin, (req, res) => {
 router.put('/updateAvatarUrl', requireLogin, (req, res) => { 
     const pic = req.body.avatarUrl;
 
-    if(!pic || pic === null) { //Kiểm tra data đầu vào
+    if(!pic || pic === null) { 
         return res.status(422).json({ status: false, error: "Data can not null"});
     }
     User.findByIdAndUpdate(req.user._id, {$set: {avatarUrl: req.body.avatarUrl}}, {new: true},
