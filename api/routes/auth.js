@@ -11,8 +11,9 @@ const { DOMAIN } =  require('../keys');
 const mailgun = require("mailgun-js");
 const mg = mailgun({apiKey: api_key, domain: DOMAIN});
 
-const nodemailer = require('nodemailer');
-const nodemailMailgun = require('nodemailer-mailgun-transport');
+
+// const nodemailer = require('nodemailer');
+// const nodemailMailgun = require('nodemailer-mailgun-transport');
 
 
 // const auth = {
@@ -58,7 +59,7 @@ router.post('/signup', (req, res) => {
                                 }
                                 console.log(body);
                             });
-                            res.status(200).json({status: 200, message: "Saved successfully, Please heck your email"})
+                            res.status(200).json({status: 200, message: "Saved successfully, Please check your email"})
 
                     })
                     .catch((err) => {                        
@@ -136,5 +137,31 @@ router.post('/reset-password', (req, res) => {
             })
     })
 });
+
+//Reset password => Click vao lick email de nhan token sau do no se mo ra mot trang de nhap vao new password
+//Create New Password and Save it in db
+router.post('/new-password', (req, res) => {
+    const newPasword = req.body.password;
+    const sentToken = req.body.token;
+
+    User.findOne({resetToken: sentToken, expireToken: {$gt: Date.now()}})
+        .then(user => {
+            if(!user) {
+                return res.status(422).json({error: "Try again session expired"}); //hết hạn token
+            }
+            bcrypt.hash(newPasword, 12)
+                .then(hashedpassword => {
+                    user.password = hashedpassword
+                    user.resetToken = undefined
+                    user.expireToken = undefined
+                    user.save()
+                        .then((savedUser) => {
+                            return res.status(200).json({status: 200, message: "Password updated success"});
+                        })
+                })
+        }).catch(err => {
+            return res.status(500).json({status: false, error: err});
+        })
+})
 
 module.exports = router;

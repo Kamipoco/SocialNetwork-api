@@ -17,12 +17,10 @@ function upload(file) {
     });
 
     return new Q.Promise((resolve, reject) => {
-        cloudnary.v2.uploader.upload(file, {width: 350, height: 350}, (err, res) => {
+        cloudnary.v2.uploader.upload(file, (err, res) => {
             if(err) {
-                console.log('cloudnary err:' + err);
                 reject(err);
             } else {
-                console.log('cloudnary res: ' + res);
                 return resolve(res.url);
             }
         });

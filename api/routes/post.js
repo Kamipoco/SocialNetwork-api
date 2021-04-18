@@ -9,7 +9,7 @@ const multer = require('multer');
 const upload  = require('../helper/helper').upload;
 
 //Hiển thị tất cả bài đăng
-// router.get('/allPost', requireLogin,(req,res) => {   
+// router.get('/Test', requireLogin,(req,res) => {   
 
 //     Post.find()
 //         .populate('postedBy', '_id name username avatarUrl')    //populate đc hiểu là nếu postedBy(Post) = _id(User) thì posts có thể lấy dữ liệu của bên db users
@@ -90,29 +90,6 @@ router.get('/getSubpost', requireLogin,(req,res) => {
         }).catch((err) => {
             res.status(500).json({status: false, error: err});
         }); 
-});
-
-//Tạo bài đăng
-router.post('/createPost', requireLogin, (req, res) => { 
-    const {hashtag, content, photo} = req.body;
-    if(!hashtag || !content || !photo) {
-        return res.status(422).json({errors: "Please add all the field"});
-    }
-    console.log(req.user);
-
-    const post = new Post({
-        hashtag,
-        content,
-        // photo: avatarUrl,
-        photo,
-        postedBy: req.user
-    });
-    post.save()
-        .then((post) => {
-            res.status(200).json({ status: 200, message: 'Created Post Successfully!', data: {post} });
-        }).catch((err) => {
-            res.status(422).json({error: err});
-        });
 });
 
 //Tạo bài đăng

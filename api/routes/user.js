@@ -6,6 +6,9 @@ const requireLogin = require('../middleware/requireLogin');
 const Post = mongoose.model("Post");
 const User = mongoose.model("User");
 const bcrypt = require('bcryptjs');
+const cloudinary = require('../utils/cloudinary');
+const upload = require('../utils/multer');
+// const path = require('path');
 
 function getUsers(res) {                             //Chú ý khi get tất cả thì dữ liệu trả về là 1 mảng or 1 mảng gồm các object
                                                     //Còn lấy chi tiết từng cái thì dữ liệu trả về là 1 object
@@ -15,7 +18,7 @@ function getUsers(res) {                             //Chú ý khi get tất c�
         } else {
             res.status(200).json({status: 200, message: "Success", data: {users}});
         }
-    });
+    }).select("-password"); //ko lấy password khi get infor user
 }
 
 //Lấy tất cả user
@@ -46,15 +49,14 @@ router.get('/user/:id', requireLogin, (req, res) => {
 //B2: xong từ _id ta lấy bài viết thông qua (_id)
 router.get('/users/:username', requireLogin, async (req, res) => {
     try {
-        const user = await User.findOne({ username: req.params.username });
+        const user = await User.findOne({ username: req.params.username }).select("-password");
         const idUsername = user._id; //lấy _id của username được truyền qua params sau đó từ _id lấy posts của ng đó
-        // console.log(idUsername);
-        // console.log(user);
-        Post.findOne({postedBy: idUsername})
+
+        Post.find({postedBy: idUsername})
         .populate('postedBy', '_id name username avatarUrl') 
         .populate("comments.postedBy", "_id name avatarUrl")
         .then((posts) => {
-            res.status(200).json({status: 200, message: "Success", data: {posts, user}});
+            res.status(200).json({status: 200, message: "Success", data: {user, posts}});
         }).catch((err) => {
             res.status(404).json({error: err});
         });
@@ -106,20 +108,29 @@ router.put('/unfollow', requireLogin, (req, res) => {
     })
 });
 
-//Cập nhật avatar và lưu vào DB
-router.put('/updateAvatarUrl', requireLogin, (req, res) => { 
-    const pic = req.body.avatarUrl;
+//Update avatar
+router.put('/profile/updateAvatar/:id', requireLogin, upload.single("avatarUrl"), async (req, res) => {
+    try {
+        // let user = await User.findById(req.params.id);
+        //xóa ảnh trên cloudinary
+        // await cloudinary.uploader.destroy(user.avatarUrl); 
 
-    if(!pic || pic === null) { 
-        return res.status(422).json({ status: false, error: "Data can not null"});
+        //Cập nhập lại ảnh đại diện đưa lên cloudinary
+        
+        const result = await cloudinary.uploader.upload(req.file.path, (err, result) => {
+            console.log(result);
+            console.log(result.url);
+            // console.log(err);
+        });
+        const data = {
+            avatarUrl: result.url || user.avatarUrl
+        };
+
+        infoUser = await User.findByIdAndUpdate(req.params.id, data, {new: true}).select("-password");
+        return res.status(200).json({status: 200, message: "Update Avatar Successfully!", data: {infoUser}});
+    } catch (error) {
+        return res.status(500).json({status: 500, error: error});
     }
-    User.findByIdAndUpdate(req.user._id, {$set: {avatarUrl: req.body.avatarUrl}}, {new: true},
-        (err, result) => {
-            if(err) {
-                return res.status(422).json({error: "avatarUrl can not post"});
-            }
-            res.status(200).json({status: 200, message: "Update Success", data: {result}});
-    })
 });
 
 //Đổi mật khẩu user 
