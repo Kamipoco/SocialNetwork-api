@@ -170,8 +170,9 @@ router.get('/search-users', requireLogin, (req, res) => {
     }
 
     User.find({name: {$regex: fieldSearch, $options: '$i'}})
+        .select("-password")
         .then((users) => {
-            console.log(users);
+            // console.log(users);
             if(!users || users === null || users == "") {
                 return res.status(404).json({status: 404, message: "Not Found!"});
             }
@@ -182,8 +183,27 @@ router.get('/search-users', requireLogin, (req, res) => {
         })
 });
 
+//Search for users
+// router.get('/searchText', requireLogin, async (req, res) => {
+//     const { search } = req.query.name;
+//     console.log(req.query.name);
+
+//     if(search.length === 0) return;
+
+//     try {
+//         let userPattern = new RegExp(`${search}`);
+
+//         const result = await User.find({
+//             name: { $regex: userPattern, $options: "$i"}
+//         });
+//         return res.status(200).json({status: 200, message: "Success", data: {result}});
+//     } catch (error) {
+//         return res.status(500).json({status: 500, error: error});
+//     }
+// });
+
 //Update infor of user
-router.put('/editProfile/:id', requireLogin, (req, res) => {
+router.put('/settings/editProfile/:id', requireLogin, (req, res) => {
 
     const {name, username, email, avatarUrl, bio} = req.body;
 

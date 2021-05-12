@@ -9,18 +9,18 @@ const multer = require('multer');
 const upload  = require('../helper/helper').upload;
 
 //Hiển thị tất cả bài đăng
-// router.get('/Test', requireLogin,(req,res) => {   
+router.get('/Test', requireLogin,(req,res) => {   
 
-//     Post.find()
-//         .populate('postedBy', '_id name username avatarUrl')    //populate đc hiểu là nếu postedBy(Post) = _id(User) thì posts có thể lấy dữ liệu của bên db users
-//         .populate("comments.postedBy", "_id name avatarUrl")
-//         .sort('-createdAt')
-//         .then((posts, users) => {
-//             res.status(200).json({ status: 200, message: "Success", data:  {posts, users}});
-//         }).catch((err) => {
-//             res.status(500).json({error: err});
-//         });
-// });
+    Post.find()
+        .populate('postedBy', '_id name username avatarUrl')    //populate đc hiểu là nếu postedBy(Post) = _id(User) thì posts có thể lấy dữ liệu của bên db users
+        .populate("comments.postedBy", "_id name avatarUrl")
+        .sort('-createdAt')
+        .then((posts, users) => {
+            res.status(200).json({ status: 200, message: "Success", data:  {posts, users}});
+        }).catch((err) => {
+            res.status(500).json({error: err});
+        });
+});
 
 //Implement Infinite Scroll Post
 router.get('/allPost', requireLogin, async (req,res) => {   

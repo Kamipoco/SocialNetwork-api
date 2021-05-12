@@ -4,6 +4,7 @@ module.exports = {
     api_key: "***", //(mailgun)
     DOMAIN: "sandboxb6b316b1d29a437fa0dc739bf7879c54.mailgun.org",
     cloud_name: "aloapp",
-    API_Key: "212597187267343", //(cloudinary)
-    api_secret: "QgvjYAQUA8bYSz3xuFrodekdiII"
+    API_Key: "***", //(cloudinary)
+    api_secret: "***",
+    sendgrid_apikey: "***" //sendgrid
 }

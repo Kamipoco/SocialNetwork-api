@@ -6,25 +6,20 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../keys');
-const { api_key } = require('../keys');
-const { DOMAIN } =  require('../keys');
-const mailgun = require("mailgun-js");
-const mg = mailgun({apiKey: api_key, domain: DOMAIN});
-
-
+// const { api_key } = require('../keys'); //api_key mailgun
+// const { DOMAIN } =  require('../keys'); //domain mailgun
+const {sendgrid_apikey} = require('../keys'); //api_key sendgrid
+// const sendGridTransport = require('nodemailer-sendgrid-transport');
+// const mailgun = require("mailgun-js");
+// const mg = mailgun({domain: DOMAIN, apiKey: api_key});
 // const nodemailer = require('nodemailer');
-// const nodemailMailgun = require('nodemailer-mailgun-transport');
 
 
-// const auth = {
-//     auth: {
-//         api_key: api_key,
-//         domain: DOMAIN
-//     }
-// };
+//test @sendgrid
+const sgMail = require("@sendgrid/mail");
+sgMail.setApiKey(sendgrid_apikey);
 
-// const transporter = nodemailer.createTransport(nodemailMailgun({auth}));
-
+//isVerify = true
 router.post('/signup', (req, res) => {
     const { name, username, email, password, avatarUrl } = req.body;
 
@@ -48,19 +43,22 @@ router.post('/signup', (req, res) => {
                     })        
                     user.save()
                     .then(user => {
-                            mg.messages().send({
-                                from: 'no-reply@insta.com',
+                            sgMail
+                            .send({
                                 to: user.email,
+                                from: {
+                                    name: 'no-reply@insta.com',
+                                    email: '1751120025@sv.ut.edu.vn'
+                                },
                                 subject: 'SignUp Success',
-                                html:`<h1>Welcome to Instagram</h1>`
-                            }, function (error, body) {
-                                if(error) {
-                                    console.log(error);
-                                }
-                                console.log(body);
-                            });
-                            res.status(200).json({status: 200, message: "Saved successfully, Please check your email"})
-
+                                text: 'From sendgrid',
+                                html:`<h1>Welcome To My App</h1>`
+                            })
+                            .then((res) => console.log('Email sent...'))
+                            .catch((err) => console.log(err));
+                                
+                            console.log(user.email);
+                            return res.status(200).json({status: 200, message: "Saved successfully, Please check your email"});
                     })
                     .catch((err) => {                        
                         return res.status(422).json({ error: err, message: "Send Email Failed!"});
@@ -100,6 +98,7 @@ router.post('/signin', (req, res) => {
 
 //Forgot Password (Gửi email veryfy -> check rồi nhập mật khẩu mới)
 router.post('/reset-password', (req, res) => {
+
     crypto.randomBytes(32, (err, buffer) => {
         if(err) {
             console.log(err);
@@ -115,23 +114,31 @@ router.post('/reset-password', (req, res) => {
                 user.expireToken = Date.now() + 3600000
                 user.save()
                     .then(result => {
-                        //Success
-                        mg.messages().send({
-                            to:result.email,
-                            from: "no-reply@insta.com",
-                            subject: "Reset password",
+                      
+                        sgMail
+                        .send({
+                            to: result.email,
+                            from: {
+                                name: 'no-reply@insta.com',
+                                email: '1751120025@sv.ut.edu.vn'
+                            },
+                            subject: 'Reset password',
+                            text: 'From sendgrid',
                             html: `
-                            <p>You requested for password reset</p>
-                            <h5>Click in this <a href="http://localhost:3000/reset/${token}">Link</a>to reset password</h5>
-                            `
+                                <h3>You requested for password reset</h3>
+                                <h3>Click in this <a href="http://localhost:3000/reset/${token}">Link</a>to reset password</h3>
+                                `
                         })
-                        .then((body) => {
-                            return res.json({status: 200, message: "Check your email", body: body})
-                        })
-                        .catch((err) => {
-                            console.log(err);
-                            return res.status(500).json({error: err});
-                        });
+
+                        return res.json({status: 200, message: "Check your email"});
+
+                        // .then((body) => {
+                        //     return res.json({status: 200, message: "Check your email", body: body});
+                        // })
+                        // .catch((err) => {
+                        //     console.log(err);
+                        //     return res.status(500).json({error: err});
+                        // });
                         
                     })
             })
@@ -139,17 +146,21 @@ router.post('/reset-password', (req, res) => {
 });
 
 //Reset password => Click vao lick email de nhan token sau do no se mo ra mot trang de nhap vao new password
-//Create New Password and Save it in db
+//Create New Password
 router.post('/new-password', (req, res) => {
-    const newPasword = req.body.password;
-    const sentToken = req.body.token;
+    const {token, password} = req.body;
 
-    User.findOne({resetToken: sentToken, expireToken: {$gt: Date.now()}})
+    if(!token) {
+        return res.status(401).send('Unauthorized');
+    }
+
+    User.findOne({resetToken: token, expireToken: {$gt: Date.now()}})
         .then(user => {
             if(!user) {
+                console.log(Date.now());
                 return res.status(422).json({error: "Try again session expired"}); //hết hạn token
             }
-            bcrypt.hash(newPasword, 12)
+            bcrypt.hash(password, 12)
                 .then(hashedpassword => {
                     user.password = hashedpassword
                     user.resetToken = undefined

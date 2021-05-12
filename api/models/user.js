@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    isVerified: { //check mail => true
+    isVerified: {
         type: Boolean,
         default: false
     },
@@ -22,13 +22,17 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    resetToken: String,
-    expireToken: Date,
+    resetToken: {
+        type: String
+    },
+    expireToken: {
+        type: Date
+    },
     avatarUrl: {
         type: String,
         default: "https://res.cloudinary.com/aloapp/image/upload/v1617867174/images_tmzpno.png"
     },
-    bio: { //mô tả bản thân
+    bio: {
         type: String,
         default: ""
     },
