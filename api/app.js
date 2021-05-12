@@ -113,6 +113,7 @@ require('./models/user'); //Tạo các schema để có thể làm việc
 require('./models/post');
 // require('./models/chat');
 require('./models/notification');
+require('./models/tokenVerify');
 
 app.use(morgan('dev')); //log ra các trạng thái của API và thời gian phản hồi
 app.use(helmet()); //Lọc các dữ liệu người dùng gửi lên server tránh DDOS, XSS,...

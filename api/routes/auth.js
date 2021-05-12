@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 const User = mongoose.model('User');
+const TokenVerify = mongoose.model('TokenVerify');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
@@ -19,7 +20,7 @@ const {sendgrid_apikey} = require('../keys'); //api_key sendgrid
 const sgMail = require("@sendgrid/mail");
 sgMail.setApiKey(sendgrid_apikey);
 
-//isVerify = true
+//SignUp
 router.post('/signup', (req, res) => {
     const { name, username, email, password, avatarUrl } = req.body;
 
@@ -43,6 +44,13 @@ router.post('/signup', (req, res) => {
                     })        
                     user.save()
                     .then(user => {
+                        //generate 
+                        var token = new TokenVerify({ _userId: user._id, tokenVerify: crypto.randomBytes(16).toString('hex') });
+                        token.save()
+                            .then(res => console.log(res))
+                            .catch(err => console.log(err));
+            
+
                             sgMail
                             .send({
                                 to: user.email,
@@ -52,9 +60,9 @@ router.post('/signup', (req, res) => {
                                 },
                                 subject: 'SignUp Success',
                                 text: 'From sendgrid',
-                                html:`<h1>Welcome To My App</h1>`
+                                html:'Hello,\n\n <br> Please verify your account by clicking the link: \n <br> <strong><a href = ' + token.tokenVerify + '>http:\/\/ Click here to verify the given Link </a></strong>.\n .<br>Thanks<br>'
                             })
-                            .then((res) => console.log('Email sent...'))
+                            .then((res) => console.log('Email sent, Please check your email'))
                             .catch((err) => console.log(err));
                                 
                             console.log(user.email);
@@ -70,6 +78,46 @@ router.post('/signup', (req, res) => {
         })
 });
 
+//Verify Account
+router.get('/verifyAccount/:tokenVerify', (req, res) => {
+    TokenVerify.findOne({ tokenVerify: req.params.tokenVerify }, function (err, tokenVerify) {
+        // mã thông báo không được tìm thấy trong cơ sở dữ liệu tức là mã thông báo có thể đã hết hạn
+        if (!tokenVerify){
+            return res.status(400).send({msg:'Your verification link may have expired. Please click on resend for verify your Email.'});
+        }
+        // nếu mã thông báo được tìm thấy thì hãy kiểm tra người dùng hợp lệ
+        else{
+            User.findOne({ _id: tokenVerify._userId}, function (err, user) {
+                // người dùng không hợp lệ
+                if (!user){
+                    return res.status(401).send({msg:'We were unable to find a user for this verification. Please SignUp!'});
+                } 
+                // người dùng đã được xác minh
+                else if (user.isVerified){
+                    return res.status(200).send('User has been already verified. Please Login');
+                }
+                // xác minh người dùng
+                else{
+                    // thay đổi isVerified = true
+                    user.isVerified = true;
+                    user.save(function (err) {
+                        // xảy ra lỗi
+                        if(err){
+                            return res.status(500).send({msg: err.message});
+                        }
+                        // tài khoản được xác minh thành công
+                        else{
+                          return res.status(200).json({status: 200, message: 'Your account has been successfully verified'});
+                        }
+                    });
+                }
+            });
+        }
+        
+    });
+});
+
+//LOGIN
 router.post('/signin', (req, res) => {
     const { email, password } = req.body;
     if(!email || !password && email !== null && password !== null) {
@@ -96,7 +144,7 @@ router.post('/signin', (req, res) => {
         });
 });
 
-//Forgot Password (Gửi email veryfy -> check rồi nhập mật khẩu mới)
+//Forgot Password (Gửi email verify -> check rồi nhập mật khẩu mới)
 router.post('/reset-password', (req, res) => {
 
     crypto.randomBytes(32, (err, buffer) => {
@@ -145,7 +193,6 @@ router.post('/reset-password', (req, res) => {
     })
 });
 
-//Reset password => Click vao lick email de nhan token sau do no se mo ra mot trang de nhap vao new password
 //Create New Password
 router.post('/new-password', (req, res) => {
     const {token, password} = req.body;
@@ -173,6 +220,6 @@ router.post('/new-password', (req, res) => {
         }).catch(err => {
             return res.status(500).json({status: false, error: err});
         })
-})
+});
 
 module.exports = router;
