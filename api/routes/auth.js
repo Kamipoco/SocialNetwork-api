@@ -44,13 +44,13 @@ router.post('/signup', (req, res) => {
                     })        
                     user.save()
                     .then(user => {
-                        //generate 
+                        //generate token
                         var token = new TokenVerify({ _userId: user._id, tokenVerify: crypto.randomBytes(16).toString('hex') });
                         token.save()
                             .then(res => console.log(res))
                             .catch(err => console.log(err));
             
-
+                            //send mail
                             sgMail
                             .send({
                                 to: user.email,
@@ -114,6 +114,51 @@ router.get('/verifyAccount/:tokenVerify', (req, res) => {
             });
         }
         
+    });
+});
+
+//ResendLink Verify Account
+router.post('/resendLink', (req, res) => {
+
+    User.findOne({email: req.body.email}, function (err, user) {
+        //User ko tìm thấy trong db
+        if(!user) {
+            return res.status(404).json({status: false, message: 'Not found!'});
+        }
+
+        //Ngược lại nếu user đã được xác thực
+        else if(user.isVerified) {
+            return res.status(200).json({status: 200, message: 'User isVerified'});
+        }
+
+        //gửi link được xác thực
+        else {
+            // generate token and save
+            var token =  TokenVerify({_userId: user._id, tokenVerify: crypto.randomBytes(16).toString('hex')});
+            token.save(function (err) {
+                if(err) {
+                    return res.status(500).json({status: false, error: err});
+                }
+
+                // Send email
+                sgMail
+                .send({
+                    to: user.email,
+                    from: {
+                        name: 'no-reply@insta.com',
+                        email: '1751120025@sv.ut.edu.vn'
+                    },
+                    subject: 'SignUp Success',
+                    text: 'From sendgrid',
+                    html: 'Hello,\n\n <br> Please verify your account by clicking the link: \n <br> <strong><a href = http://localhost:3000/verifyAccount/' + token.tokenVerify + '>http:\/\/ Click here to verify the given Link </a></strong>.\n .<br>Thanks<br>'
+                })
+                .then((res) => console.log('Email sent, Please check your email'))
+                .catch((err) => console.log(err));
+                    
+                return res.status(200).json({status: 200, message: "Please check your email"});
+
+            })
+        }
     });
 });
 
