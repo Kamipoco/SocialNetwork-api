@@ -17,7 +17,8 @@ router.get('/Test', requireLogin,(req,res) => {
         .sort('-createdAt')
         .then((posts, users) => {
             res.status(200).json({ status: 200, message: "Success", data:  {posts, users}});
-        }).catch((err) => {
+        })
+        .catch((err) => {
             res.status(500).json({error: err});
         });
 });
@@ -54,7 +55,7 @@ router.get('/allPost', requireLogin, async (req,res) => {
 });
 
 //Hiển thị những bài đăng mà mình đã yêu thích
-// router.get('/likePost', (req, res) => {
+// router.get('/likePost', requireLogin, (req, res) => {
 //     Post.find()
 //         .populate('postedBy', '_id name username avatarUrl')
 //         .populate("likes")

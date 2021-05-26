@@ -8,6 +8,7 @@ const User = mongoose.model("User");
 const bcrypt = require('bcryptjs');
 const cloudinary = require('../utils/cloudinary');
 const upload = require('../utils/multer');
+const { request } = require('express');
 // const path = require('path');
 
 function getUsers(res) {                             //Chú ý khi get tất cả thì dữ liệu trả về là 1 mảng or 1 mảng gồm các object
@@ -183,24 +184,26 @@ router.get('/search-users', requireLogin, (req, res) => {
         })
 });
 
-//Search for users
-// router.get('/searchText', requireLogin, async (req, res) => {
-//     const { search } = req.query.name;
-//     console.log(req.query.name);
+//Get friends
+router.get('/friends/:userId', async (req, res) => {
+    try {
+        const user = await User.findById(req.params.userId);
+        const friends = await Promise.all(
+            user.following.map((friendId) => {
+                return User.findById(friendId);
+            })
+        );
 
-//     if(search.length === 0) return;
-
-//     try {
-//         let userPattern = new RegExp(`${search}`);
-
-//         const result = await User.find({
-//             name: { $regex: userPattern, $options: "$i"}
-//         });
-//         return res.status(200).json({status: 200, message: "Success", data: {result}});
-//     } catch (error) {
-//         return res.status(500).json({status: 500, error: error});
-//     }
-// });
+        let friendList = [];
+        friends.map((friend) => {
+            const { _id, username, name, avatarUrl } = friend;
+            friendList.push({_id, username, name, avatarUrl}); 
+        });
+    } catch (error) {
+        console.log(error);
+        return {error};
+    }
+});
 
 //Update infor of user
 router.put('/settings/editProfile/:id', requireLogin, (req, res) => {

@@ -1,0 +1,92 @@
+[
+    {
+        "_id":"733806b8",
+        "name":"chao",      //Nickname của người nhận
+        "users":[      
+                    {   
+                        "_id":"60715a41c19e402e0077b799",       
+                        "name":"Tính Tử Tế",
+                        "username":"__therealTINHTUTE",
+                        "avatarUrl":"http://res.cloudinary.com/aloapp/image/upload/v1619772513/ad6nw2onoqyvwydusfcp.png"
+                    },
+                    {
+                        "_id":"60963c3a0c977620d0fd4e80",
+                        "name":"Vai Lon",
+                        "username":"vailon",
+                        "avatarUrl":"http://res.cloudinary.com/aloapp/image/upload/v1620458571/gqq5li6d87rttguqkz6u.png"
+                    }
+                ],
+        "messages":[
+                        {
+                            "_id":"6gzsmp9z",
+                            "content":"hi",
+                            "senderId":"__therealTINHTUTE",
+                            "timestamp":"Mon May 10 2021"
+                        },
+                        {
+                            "_id":"ejbw9h6a",
+                            "content":"burno mars",
+                            "senderId":"vailon",
+                            "timestamp":"Mon May 10 2021"
+                        },
+                        {
+                            "_id":"swcleuvl",
+                            "content":"leave open the door",
+                            "senderId":"__therealTINHTUTE",
+                            "timestamp":"Mon May 10 2021"
+                        },
+                        {
+                            "_id":"s2tk004w",
+                            "content":"minh biet roi",
+                            "senderId":"__therealTINHTUTE",
+                            "timestamp":"Mon May 10 2021"
+                        },
+                        {
+                            "_id":"o31ujvhu",
+                            "content":"the ok roi à",
+                            "senderId":"vailon",
+                            "timestamp":"Mon May 10 2021"
+                        }
+                    ],
+        "timestamp":"Mon May 10 2021"
+    },
+    {
+        "_id":"1v6bx99i",
+        "name":"Xin Đừng Nhấc Máy",   //Nickname
+        "users":[
+                    {
+                        "_id":"60865f0de0bce60eb4cf04fc",
+                        "name":"Im talking about",
+                        "username":"yunbray",
+                        "avatarUrl":"http://res.cloudinary.com/aloapp/image/upload/v1620281279/cd5alxkdb7jjfga96yzj.png"
+                    },
+                    {
+                        _id":"60715a41c19e402e0077b799",
+                        "name":"Tính Tử Tế",
+                        "username":"__therealTINHTUTE",
+                        "avatarUrl":"http://res.cloudinary.com/aloapp/image/upload/v1619772513/ad6nw2onoqyvwydusfcp.png"
+                    }
+                ],
+        "messages":[
+                        {
+                          "_id":"539uh3kn",
+                          "content":"hi",
+                          "senderId":"__therealTINHTUTE",
+                          "timestamp":"Mon May 10 2021"
+                        },
+                        {
+                            "_id":"nco2xwi4",
+                            "content":"ok fen",
+                            "senderId":"yunbray",
+                            "timestamp":"Mon May 10 2021"
+                        },
+                        {
+                            "_id":"1fl2omqx",
+                            "content":"uk fen",
+                            "senderId":"__therealTINHTUTE",
+                            "timestamp":"Mon May 10 2021"
+                        }
+                    ],
+        "timestamp":"Mon May 10 2021"
+    }
+]

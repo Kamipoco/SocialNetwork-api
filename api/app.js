@@ -9,8 +9,9 @@ const morgan = require('morgan');
 const helmet = require('helmet');
 const PORT = 5000;
 const { MongoUrl } = require('./keys');
-const {addUser, removeUser, findConnectedUser} = require('./utilsServer/roomAction');
-const {loadMessages, sendMsg, setMsgToUnread, deleteMsg} = require('./utilsServer/messageAction');
+const { remove } = require('./models/message');
+// const {addUser, removeUser, findConnectedUser} = require('./utilsServer/roomAction');
+// const {loadMessages, sendMsg, setMsgToUnread, deleteMsg} = require('./utilsServer/messageAction');
 
 mongoose.set('useFindAndModify', false);
 
@@ -33,6 +34,80 @@ app.use(bodyParser.urlencoded({ extended: true })); //chấp nhận mọi kiểu
 //=> ĐÃ ĐƯỢC THAY THẾ BẰNG
 app.use(express.json());//Kiểu dữ liệu muốn đọc từ người dùng gửi lên đc chuyển sang json
 app.use(express.urlencoded({extended: true}))
+
+
+//===============================ACTION===================================
+const users = [];
+
+//AddUser
+const addUser = async (userId, socketId) => {
+    const user = users.find(user => user.userId === userId);
+
+    if(user && user.socketId === socketId) {
+        return users
+    } else {
+        if(user && user.socketId !== socketId) {
+            await removeUser(user.socketId);
+        }
+
+        const newUser = { userId, socketId };
+        users.push(newUser);
+        return users;
+    }
+};
+
+//removeUser
+const removeUser = (socketId) => {
+    users = users.filter((user) => user.socketId !== socketId);
+
+    // const indexOf = users.map(user => user.socketId).indexOf(socketId);
+    // await users.splice(indexOf, 1);
+    // return;
+};
+
+//FindConnectedUser
+const getUser = (userId) => {
+    return users.find(user => user.userId === userId);
+};
+
+
+//=====================  SOCKET  ============================================
+io.on('connection', (socket) => {
+
+    //Connect
+    console.log('A user connected.');
+    
+    //Lấy userId và socketId từ user
+    socket.on('addUser', userId => {
+        addUser(userId, socket.id);
+        io.emit('getUsers', users);
+    });
+
+    //Gửi và nhận message
+    socket.on('sendMessage', ({userId, receiverId, msg}) => {
+        const user = getUser(receiverId);
+
+        io.to(user.socketId).emit('getMessage', {
+            senderId,
+            msg
+        });
+    }); 
+    
+    //Offline
+    socket.on('disconnect', (res) => {
+        console.log('A User disconnect!');
+        removeUser(socket.id);
+        io.emit('getUsers', users);
+    });
+
+    // Listen on typing
+    socket.on('typing', (data) => {
+        socket.broadcast.emit('typing', {
+            username: socket.username
+        })
+    });
+});
+
 
 //SOCKET
 // io.on("Connection", socket => {
@@ -62,7 +137,7 @@ app.use(express.urlencoded({extended: true}))
 //     });
 
 //     //send new message
-//     socket.on("sendNewMsg", async ({userId, msgSendToUserId, msg}) => {         GỬI TIN NHẮN MỚI ĐẾN CHO AI ĐÓ THÌ CẦN TRUYỀN VÀO userId và msg và (msgSendToUserId)id cái user sẽ được nhận tin nhắn 
+//     socket.on("sendNewMsg", async ({userId, msgSendToUserId, msg}) => {         GỬI TIN NHẮN MỚI ĐẾN CHO AI ĐÓ THÌ CÓ userId và msg và (msgSendToUserId)id cái user sẽ được nhận tin nhắn 
 //         const {newMsg, error} =  await sendMsg(userId, msgSendToUserId, msg);
 //         const receiverSocket = await findConnectedUser(msgSendToUserId);
 
@@ -111,7 +186,8 @@ app.use(express.urlencoded({extended: true}))
 
 require('./models/user'); //Tạo các schema để có thể làm việc 
 require('./models/post');
-// require('./models/chat');
+require('./models/conversation');
+require('./models/message');
 require('./models/notification');
 require('./models/tokenVerify');
 
@@ -120,7 +196,7 @@ app.use(helmet()); //Lọc các dữ liệu người dùng gửi lên server tr�
 app.use(require('./routes/auth')); //định tuyến đường đi cho các API 
 app.use(require('./routes/post'));
 app.use(require('./routes/user'));
-// app.use(require('./routes/chat'));
+app.use(require('./routes/chat'));
 
 
 app.listen(PORT, () => { 
