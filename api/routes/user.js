@@ -199,9 +199,10 @@ router.get('/friends/:userId', async (req, res) => {
             const { _id, username, name, avatarUrl } = friend;
             friendList.push({_id, username, name, avatarUrl}); 
         });
-    } catch (error) {
-        console.log(error);
-        return {error};
+
+        res.status(200).json({status: 200, message: "Success", data: {friendList}});
+    } catch (err) {
+        res.status(500).json(err);
     }
 });
 

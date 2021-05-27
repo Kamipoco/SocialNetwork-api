@@ -80,8 +80,6 @@ router.get('/getConversationOfUser', requireLogin, (req, res) => {
 router.get('/getMessages/:conversationId', requireLogin, (req, res) => {
 
     Messages.find({conversationId: req.params.conversationId })
-    .populate("conversationId", "members date")
-    .populate("senderId", "_id name username avatarUrl")
         .then((messages) => {
             res.status(200).json({ status: 200, message: "Get Messages Success", data:  {messages}});
         })
