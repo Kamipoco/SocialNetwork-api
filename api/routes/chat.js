@@ -17,17 +17,30 @@ const idSender = req.user._id;
 const idReceiver = req.body._id; 
 console.log(req.body);
 
-const result = new Conversation({
-    users: [idSender, idReceiver],
-    date: Date.now()
+    Conversation.findOne({ members: { $all: [ idSender, idReceiver] } })
+        .then((data) => {
+            if(data !== null) {
+                return res.status(422).json({status: false, message: `Create failed, Id ${idReceiver} already exists in the conversation with you`});
+            } else {
 
-});
-result.save()
-    .then((newConversation) => {
-        res.status(200).json({ status: 200, message: 'Add New Conversation Successfully!', data: {newConversation} });
-    }).catch((err) => {
-        res.status(422).json({error: err});
-    });
+                const result = new Conversation({
+                    members: [idSender, idReceiver],
+                    date: Date.now()
+                
+                });
+
+                result.save()
+                    .then((newConversation) => {
+                        res.status(200).json({ status: 200, message: 'Add New Conversation Successfully!', data: {newConversation} });
+                    }).catch((err) => {
+                        res.status(422).json({error: err});
+                    });
+            }
+        })
+        .catch((err) => {
+            console.log('Query failed or input is invalid');
+            return res.status(500).json({status: false, error: err});
+        });
 
 }); 
 
