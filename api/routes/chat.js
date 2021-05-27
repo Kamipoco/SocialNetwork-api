@@ -20,7 +20,7 @@ console.log(req.body);
     Conversation.findOne({ members: { $all: [ idSender, idReceiver] } })
         .then((data) => {
             if(data !== null) {
-                return res.status(422).json({status: false, message: `Create failed, Id ${idReceiver} already exists in the conversation with you`});
+                return res.status(422).json({status: false, message: `Create failed, Id ${idReceiver} already exists in the conversation with you`, data: data});
             } else {
 
                 const result = new Conversation({
