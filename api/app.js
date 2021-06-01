@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const server = require('http').Server(app);
+const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 var bodyParser = require('body-parser'); //Chuyển dữ liệu về dạng json để có thể đọc được
 const mongoose = require('mongoose');
@@ -34,77 +34,76 @@ app.use(express.json());//Kiểu dữ liệu muốn đọc từ người dùng g
 app.use(express.urlencoded({extended: true}))
 
 
-// //===============================ACTION===================================
-// const users = [];
+//===============================ACTION===================================
+const users = [];
 
-// //AddUser
-// const addUser = async (userId, socketId) => {
-//     const user = users.find(user => user.userId === userId);
+//AddUser
+const addUser = async (userId, socketId) => {
+    const user = users.find(user => user.userId === userId);
 
-//     if(user && user.socketId === socketId) {
-//         return users
-//     } else {
-//         if(user && user.socketId !== socketId) {
-//             await removeUser(user.socketId);
-//         }
+    if(user && user.socketId === socketId) {
+        return users
+    } else {
+        if(user && user.socketId !== socketId) {
+            await removeUser(user.socketId);
+        }
 
-//         const newUser = { userId, socketId };
-//         users.push(newUser);
-//         return users;
-//     }
-// };
+        const newUser = { userId, socketId };
+        users.push(newUser);
+        return users;
+    }
+};
 
-// //removeUser
-// const removeUser = (socketId) => {
-//     users = users.filter((user) => user.socketId !== socketId);
+//removeUser
+const removeUser = (socketId) => {
+    users = users.filter((user) => user.socketId !== socketId);
+};
 
-//     // const indexOf = users.map(user => user.socketId).indexOf(socketId);
-//     // await users.splice(indexOf, 1);
-//     // return;
-// };
-
-// //FindConnectedUser
-// const getUser = (userId) => {
-//     return users.find(user => user.userId === userId);
-// };
+//FindConnectedUser
+const getUser = (userId) => {
+    return users.find(user => user.userId === userId);
+};
 
 
-// //=====================  SOCKET  ============================================
-// io.on('connection', (socket) => {
+//=====================  SOCKET  ============================================
+io.on('connection', (socket) => {
 
-//     //Connect
-//     console.log('A user connected.');
+    //Connect
+    console.log('A user connected.');
     
-//     //Lấy userId và socketId từ user
-//     socket.on('addUser', userId => {
-//         addUser(userId, socket.id);
-//         io.emit('getUsers', users);
-//     });
+    //Lấy userId và socketId từ user
+    socket.on('addUser', userId => {
+        addUser(userId, socket.id);
+        io.emit('getUsers', users);
+    });
+     
+      Lấy
 
-//     //Gửi và nhận message
-//     socket.on('sendMessage', ({userId, receiverId, msg}) => {
-//         const user = getUser(receiverId);
+    //Gửi và nhận message
+    //receiverID lọc trong members có id khác với userId
+    socket.on('sendMessage', ({senderId, receiverId, msg}) => {
+        const user = getUser(receiverId);
 
-//         io.to(user.socketId).emit('getMessage', {
-//             senderId,
-//             msg
-//         });
-//     }); 
+        io.to(user.socketId).emit('getMessage', {
+            senderId,
+            msg
+        });
+    }); 
     
-//     //Offline
-//     socket.on('disconnect', (res) => {
-//         console.log('A User disconnect!');
-//         removeUser(socket.id);
-//         io.emit('getUsers', users);
-//     });
+    //Offline
+    socket.on('disconnect', (res) => {
+        console.log('A User disconnect!');
+        removeUser(socket.id);
+        io.emit('getUsers', users);
+    });
 
-//     // Listen on typing
-//     socket.on('typing', (data) => {
-//         socket.broadcast.emit('typing', {
-//             username: socket.username
-//         })
-//     });
-// });
+    // Listen on typing
+    socket.on('typing', (data) => {
+        socket.broadcast.emit('typing', {
+            username: socket.username
+        })
+    });
+});
 
 
 require('./models/user'); //Tạo các schema để có thể làm việc 
@@ -122,6 +121,47 @@ app.use(require('./routes/user'));
 app.use(require('./routes/chat'));
 
 
-app.listen(PORT, () => { 
+server.listen(PORT, () => { 
     console.log('Server is running on', PORT);
 });
+
+
+// io.onlineUsers = {};
+
+// io.on('connection', (socket) => {
+//     var currentUserId;
+
+//     socket.on('join', (userId) => {
+//         socket.join(userId);
+//         currentUserId = userId;
+//     });
+
+//     //Online & Offline
+//     socket.on('goOnline', (id) => {
+//         io.onlineUsers[id] = true;
+
+//         socket.on('userDisconnected', (userCurrentId) => {
+//             io.onlineUsers[userCurrentId] = false;
+//         });
+
+//         socket.on('disconnect', (userId) => {
+//             console.log(io.onlineUsers);
+
+//             io.onlineUsers[currentUserId] = false;
+//             io.emit('onlineFriends', io.onlineUsers);
+//         });
+//     });
+
+//     //getOnlineFriends
+//     socket.on('getOnlineFriends', (userInfor) => {
+//         io.emit('onlineFriends', io.onlineUsers);
+//     });
+
+//     //Gửi và nhận msg
+//     socket.on('sendMessage', (data) => {
+//         io.to(data.socketId).emit('newMessage', data);
+
+//         io.to(data.receiverId).emit('newChat', data);
+//     });
+
+// });

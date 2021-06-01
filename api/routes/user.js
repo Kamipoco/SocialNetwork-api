@@ -9,6 +9,7 @@ const bcrypt = require('bcryptjs');
 const cloudinary = require('../utils/cloudinary');
 const upload = require('../utils/multer');
 const { request } = require('express');
+const { result } = require('underscore');
 // const path = require('path');
 
 function getUsers(res) {                             //Chú ý khi get tất cả thì dữ liệu trả về là 1 mảng or 1 mảng gồm các object
@@ -107,6 +108,38 @@ router.put('/unfollow', requireLogin, (req, res) => {
         })
         
     })
+});
+
+//get Followers and Following of User
+router.get('/getFollowOfUser', requireLogin, (req, res) => {
+    const user = req.user._id;
+
+    User.find({_id: user})
+        .populate("followers", "_id username name avatarUrl")
+        .populate("following", "_id username name avatarUrl")
+        .select("-password")
+        .then((result) => {
+            res.status(200).json({status: 200, message: "Success", data: {result}});
+        })
+        .catch((err) => {
+            res.status(404).json({error: err});
+        });
+});
+
+//get Detail Follow Of Friend
+router.get('/getDetailFollow/:username', requireLogin, (req, res) => {
+    const username = req.params.username;
+
+    User.find({username: username})
+        .populate("followers", "_id username name avatarUrl")
+        .populate("following", "_id username name avatarUrl")
+        .select("-password")
+        .then((result) => {
+            res.status(200).json({status: 200, message: "Success", data: {result}});
+        })
+        .catch((err) => {
+            res.status(404).json({error: err});
+        });
 });
 
 //Update avatar

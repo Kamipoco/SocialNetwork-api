@@ -93,6 +93,7 @@ router.get('/getConversationOfUser', requireLogin, (req, res) => {
 router.get('/getMessages/:conversationId', requireLogin, (req, res) => {
 
     Messages.find({conversationId: req.params.conversationId })
+        .sort('Date') 
         .then((messages) => {
             res.status(200).json({ status: 200, message: "Get Messages Success", data:  {messages}});
         })
@@ -110,7 +111,7 @@ router.post('/newMessage/:idOfConversation', requireLogin, (req, res) => {
         const userId = req.user._id;
         const msg = req.body.msg;
 
-        const newMsg = new Messages({
+        const newMsg = new Messages({      //receiver socket
             conversationId: idOfConversation,
             msg: msg,
             senderId: userId,

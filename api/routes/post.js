@@ -67,6 +67,7 @@ router.get('/allPost', requireLogin, async (req,res) => {
 //         });
 // });
 
+
 //Chi tiết bài viết
 router.get('/post/:id', requireLogin, (req, res) => {  
     Post.findById({_id: req.params.id})
@@ -112,6 +113,12 @@ let uploadMul = multer({
 });
 //Create Post
 router.post("/create", requireLogin, uploadMul.array("photo",6), user_controller.create);
+
+//Update Post
+router.put('/editPost', requireLogin, (req, res) =>{
+    //Edit a post
+
+});
 
 
 //Profile
