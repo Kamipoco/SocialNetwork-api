@@ -1,7 +1,12 @@
 const express = require('express');
 const app = express();
 const server = require('http').createServer(app);
-const io = require('socket.io')(server);
+const io = require('socket.io')(server, {
+    cors: {
+        origin: '*',
+    }
+});
+
 var bodyParser = require('body-parser'); //Chuyển dữ liệu về dạng json để có thể đọc được
 const mongoose = require('mongoose');
 const cors = require('cors');
