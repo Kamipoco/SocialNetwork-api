@@ -111,15 +111,12 @@ let uploadMul = multer({
         fileSize: maxSize
     }
 });
+
 //Create Post
 router.post("/create", requireLogin, uploadMul.array("photo",6), user_controller.create);
 
 //Update Post
-router.put('/editPost', requireLogin, (req, res) =>{
-    //Edit a post
-
-});
-
+router.put("/editPost/:PostId", requireLogin, uploadMul.array("photo",6), user_controller.editPost);
 
 //Profile
 //Hiển thị bài đăng của chính mình(_id của ng đăng nhập(user))

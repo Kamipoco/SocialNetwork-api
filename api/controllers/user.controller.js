@@ -46,3 +46,44 @@ exports.create = async (req, res, next) => {
         return next(error);
     }
 }
+
+exports.editPost = async (req, res, next) => {
+    if(!req.files || _.isEmpty(req.files)) {
+        return res.status(400).json({ status: 400, message: "No file uploaded!"});
+    }
+    const files = req.files;
+    try {
+        let urls = [];
+        let multiple = async (path) => await upload(path);
+        for(const file of files) {
+            const {path} = file;
+            // console.log("path", file);
+
+            const newPath = await multiple(path);
+            urls.push(newPath);
+            fs.unlinkSync(path);
+        }
+        if(urls) {
+            const PostId = req.params.PostId;
+            let body = req.body;
+            let updates = _.extend(body, {postedBy: req.user}, {photo: urls });
+            const options = {new: true};
+
+            Post.findByIdAndUpdate(PostId, updates, options)
+                .then((result) => {
+                    res.status(200).json({status: 200, message: "Success", data: {result}});
+                })
+                .catch((err) => {
+                    res.status(500).json({status: false, error: err});
+                });
+        }
+        if(!urls) {
+            return res.status(400).json({status: 400, message: "Urls Empty"});
+        }
+    } catch (error) {
+        // console.log("err: " + error);
+        return next(error);
+    }
+
+
+}
