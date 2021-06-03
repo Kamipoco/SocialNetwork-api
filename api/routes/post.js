@@ -9,7 +9,7 @@ const multer = require('multer');
 const upload  = require('../helper/helper').upload;
 
 //Hiển thị tất cả bài đăng
-router.get('/Test', requireLogin,(req,res) => {   
+router.get('/Test', requireLogin, (req, res) => {   
 
     Post.find()
         .populate('postedBy', '_id name username avatarUrl')    //populate đc hiểu là nếu postedBy(Post) = _id(User) thì posts có thể lấy dữ liệu của bên db users
@@ -24,7 +24,7 @@ router.get('/Test', requireLogin,(req,res) => {
 });
 
 //Implement Infinite Scroll Post
-router.get('/allPost', requireLogin, async (req,res) => {   
+router.get('/allPost', requireLogin, async (req, res) => {   
     const {pageNumber} = req.query;
     const number = Number(pageNumber);
     const size = 8;
@@ -38,6 +38,7 @@ router.get('/allPost', requireLogin, async (req,res) => {
                 .sort('-createdAt')
                 .populate('postedBy', '_id name username avatarUrl')
                 .populate("comments.postedBy", "_id name avatarUrl")
+                .populate("likes", "_id name username avatarUrl")
         } else {
             const skips = size*(number - 1);
             posts = await Post.find()
@@ -46,6 +47,7 @@ router.get('/allPost', requireLogin, async (req,res) => {
                 .sort('-createdAt')
                 .populate('postedBy', '_id name username avatarUrl')
                 .populate("comments.postedBy", "_id name avatarUrl")
+                .populate("likes", "_id name username avatarUrl")
         }
 
         return res.status(200).json({status: 200, message: "Success", data: {posts}});
@@ -73,6 +75,7 @@ router.get('/post/:id', requireLogin, (req, res) => {
     Post.findById({_id: req.params.id})
     .populate('postedBy', '_id name username avatarUrl') 
     .populate("comments.postedBy", "_id name avatarUrl")
+    .populate("likes", "_id name username avatarUrl")
     .then((posts) => {
         res.status(200).json({status: 200, message: "Success", data: {posts}});
     }).catch((err) => {
@@ -86,6 +89,7 @@ router.get('/getSubpost', requireLogin,(req,res) => {
     Post.find({ postedBy: {$in: req.user.following}})
         .populate('postedBy', '_id name username avatarUrl')
         .populate("comments.postedBy", "_id name avatarUrl")
+        .populate("likes", "_id username name avatarUrl")
         .sort('-createdAt')
         .then((posts) => {
             res.status(200).json({status: 200, message: "Success", data: {posts}});
@@ -122,7 +126,9 @@ router.put("/editPost/:PostId", requireLogin, uploadMul.array("photo",6), user_c
 //Hiển thị bài đăng của chính mình(_id của ng đăng nhập(user))
 router.get('/myPost', requireLogin, (req, res) => { 
     Post.find({postedBy: req.user._id})
-        .populate("PostedBy", "_id name username avatarUrl")
+        .populate('postedBy', '_id name username avatarUrl')
+        .populate("comments.postedBy", "_id name avatarUrl")
+        .populate("likes", "_id username name avatarUrl")
         .then((mypost) => {
             res.status(200).json({status: 200, message: "Success", data: {mypost}});
         })

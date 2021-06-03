@@ -44,19 +44,23 @@ const users = [];
 
 //AddUser
 const addUser = async (userId, socketId) => {
-    const user = users.find(user => user.userId === userId);
 
-    if(user && user.socketId === socketId) {
-        return users
-    } else {
-        if(user && user.socketId !== socketId) {
-            await removeUser(user.socketId);
-        }
+    !users.some((user) => user.userId === userId) &&
+    users.push({ userId, socketId });
+    
+    // const user = users.find(user => user.userId === userId);
 
-        const newUser = { userId, socketId };
-        users.push(newUser);
-        return users;
-    }
+    // if(user && user.socketId === socketId) {
+    //     return users
+    // } else {
+    //     if(user && user.socketId !== socketId) {
+    //         await removeUser(user.socketId);
+    //     }
+
+    //     const newUser = { userId, socketId };
+    //     users.push(newUser);
+    //     return users;
+    // }
 };
 
 //removeUser
@@ -81,8 +85,6 @@ io.on('connection', (socket) => {
         addUser(userId, socket.id);
         io.emit('getUsers', users);
     });
-     
-      Lấy
 
     //Gửi và nhận message
     //receiverID lọc trong members có id khác với userId
@@ -99,7 +101,7 @@ io.on('connection', (socket) => {
     socket.on('disconnect', (res) => {
         console.log('A User disconnect!');
         removeUser(socket.id);
-        io.emit('getUsers', users);
+        io.emit("getUsers", users);
     });
 
     // Listen on typing
