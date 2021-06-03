@@ -38,7 +38,6 @@ router.get('/allPost', requireLogin, async (req, res) => {
                 .sort('-createdAt')
                 .populate('postedBy', '_id name username avatarUrl')
                 .populate("comments.postedBy", "_id name avatarUrl")
-                .populate("likes", "_id name username avatarUrl")
         } else {
             const skips = size*(number - 1);
             posts = await Post.find()
@@ -47,7 +46,6 @@ router.get('/allPost', requireLogin, async (req, res) => {
                 .sort('-createdAt')
                 .populate('postedBy', '_id name username avatarUrl')
                 .populate("comments.postedBy", "_id name avatarUrl")
-                .populate("likes", "_id name username avatarUrl")
         }
 
         return res.status(200).json({status: 200, message: "Success", data: {posts}});
@@ -75,7 +73,6 @@ router.get('/post/:id', requireLogin, (req, res) => {
     Post.findById({_id: req.params.id})
     .populate('postedBy', '_id name username avatarUrl') 
     .populate("comments.postedBy", "_id name avatarUrl")
-    .populate("likes", "_id name username avatarUrl")
     .then((posts) => {
         res.status(200).json({status: 200, message: "Success", data: {posts}});
     }).catch((err) => {
@@ -84,12 +81,28 @@ router.get('/post/:id', requireLogin, (req, res) => {
         
 });
 
+//Hiển thị user đã like bài post
+router.get('/getUserLikePost/:postId', requireLogin, (req, res) => {
+
+    const id = req.params.postId;
+
+    Post.findById({_id: id})
+        .populate("likes", "_id username name avatarUrl")
+        .select("-comments -photo -content -hashtag -postedBy -_id -createdAt -updatedAt")
+        .then((result) => {
+            res.status(200).json({status: 200, message: "Success", data: result});
+        })
+        .catch((err) => {
+            res.status(500).json(err);
+        });
+});
+
+
 //Hiển thị các bài đăng của người mình đã theo dõi
 router.get('/getSubpost', requireLogin,(req,res) => {  
     Post.find({ postedBy: {$in: req.user.following}})
         .populate('postedBy', '_id name username avatarUrl')
         .populate("comments.postedBy", "_id name avatarUrl")
-        .populate("likes", "_id username name avatarUrl")
         .sort('-createdAt')
         .then((posts) => {
             res.status(200).json({status: 200, message: "Success", data: {posts}});
@@ -128,7 +141,6 @@ router.get('/myPost', requireLogin, (req, res) => {
     Post.find({postedBy: req.user._id})
         .populate('postedBy', '_id name username avatarUrl')
         .populate("comments.postedBy", "_id name avatarUrl")
-        .populate("likes", "_id username name avatarUrl")
         .then((mypost) => {
             res.status(200).json({status: 200, message: "Success", data: {mypost}});
         })
@@ -206,8 +218,7 @@ router.delete('/deletePost/:postId', requireLogin,(req, res) => {
     .exec((err, post) => {
         if(err || !post) {
             return res.status(422).json({error: err})
-        }
-        if(post.postedBy._id.toString() === req.user._id.toString()) {
+         
             post.remove()
             .then((result) => {
                 res.status(200).json({status: 200, message: "Successfully deleted the post!"})

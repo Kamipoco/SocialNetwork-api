@@ -60,7 +60,7 @@ router.post('/signup', (req, res) => {
                                 },
                                 subject: 'SignUp Success',
                                 text: 'From sendgrid',
-                                html: 'Hello,\n\n <br> Please verify your account by clicking the link: \n <br> <strong><a href = http://localhost:3000/verifyAccount/' + token.tokenVerify + '>http:\/\/ Click here to verify the given Link </a></strong>.\n .<br>Thanks<br>'
+                                html: 'Hello,\n\n <br> Please verify your account by clicking the link: \n <br> <strong><a href = http://localhost:4200/profile/verify/' + token.tokenVerify + '>http:\/\/ Click here to verify the given Link </a></strong>.\n .<br>Thanks<br>'
                             })
                             .then((res) => console.log('Email sent, Please check your email'))
                             .catch((err) => console.log(err));
@@ -150,7 +150,7 @@ router.post('/resendLink', (req, res) => {
                     },
                     subject: 'SignUp Success',
                     text: 'From sendgrid',
-                    html: 'Hello,\n\n <br> Please verify your account by clicking the link: \n <br> <strong><a href = http://localhost:3000/verifyAccount/' + token.tokenVerify + '>http:\/\/ Click here to verify the given Link </a></strong>.\n .<br>Thanks<br>'
+                    html: 'Hello,\n\n <br> Please verify your account by clicking the link: \n <br> <strong><a href = http://localhost:4200/verifyAccount/' + token.tokenVerify + '>http:\/\/ Click here to verify the given Link </a></strong>.\n .<br>Thanks<br>'
                 })
                 .then((res) => console.log('Email sent, Please check your email'))
                 .catch((err) => console.log(err));
@@ -219,7 +219,7 @@ router.post('/reset-password', (req, res) => {
                             text: 'From sendgrid',
                             html: `
                                 <h3>You requested for password reset</h3>
-                                <h3>Click in this <a href="http://localhost:3000/reset/${token}">Link</a>to reset password</h3>
+                                <h3>Click in this <a href="http://localhost:4200/auth/new-password/${token}">Link</a>to reset password</h3>
                                 `
                         })
 
