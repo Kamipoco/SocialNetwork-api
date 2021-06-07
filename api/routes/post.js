@@ -218,16 +218,35 @@ router.delete('/deletePost/:postId', requireLogin,(req, res) => {
     .exec((err, post) => {
         if(err || !post) {
             return res.status(422).json({error: err})
-         
+        }
+        if(post.postedBy._id.toString() === req.user._id.toString()) {
             post.remove()
             .then((result) => {
-                res.status(200).json({status: 200, message: "Successfully deleted the post!"})
+                res.status(200).json({status: 200, message: "Successfully deleted the post!"});
             }).catch((err) => {
                 res.status(500).json({error: err});
             })
         }
     })
 });
+
+
+
+
+//Delete A Post
+// router.delete("deletePost/:postId", async (req, res) => {
+//     try {
+//       const post = await Post.findById(req.params.postId);
+//       if (post.postedBy === req.user._id) {
+//         await post.deleteOne();
+//         res.status(200).json("the post has been deleted");
+//       } else {
+//         res.status(403).json("you can delete only your post");
+//       }
+//     } catch (err) {
+//       res.status(500).json(err);
+//     }
+//   });
 
 //Xóa tất cả bài đăng của chính mình
 // router.delete('/deleteAllMyPost/:id', requireLogin, (req, res) => { 

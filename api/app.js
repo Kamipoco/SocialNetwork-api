@@ -40,7 +40,7 @@ app.use(express.urlencoded({extended: true}))
 
 
 //===============================ACTION===================================
-const users = [];
+let users = [];
 
 //AddUser
 const addUser = async (userId, socketId) => {
