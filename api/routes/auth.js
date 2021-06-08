@@ -150,7 +150,7 @@ router.post('/resendLink', (req, res) => {
                     },
                     subject: 'SignUp Success',
                     text: 'From sendgrid',
-                    html: 'Hello,\n\n <br> Please verify your account by clicking the link: \n <br> <strong><a href = http://localhost:4200/verifyAccount/' + token.tokenVerify + '>http:\/\/ Click here to verify the given Link </a></strong>.\n .<br>Thanks<br>'
+                    html: 'Hello,\n\n <br> Please verify your account by clicking the link: \n <br> <strong><a href = http://localhost:4200/profile/verify/' + token.tokenVerify + '>http:\/\/ Click here to verify the given Link </a></strong>.\n .<br>Thanks<br>'
                 })
                 .then((res) => console.log('Email sent, Please check your email'))
                 .catch((err) => console.log(err));
