@@ -92,13 +92,22 @@ router.get('/getConversationOfUser', requireLogin, (req, res) => {
 //get detail a Conversation (Lấy tin nhắn từ collection theo id của cuộc hội thoại)
 router.get('/getMessages/:conversationId', requireLogin, (req, res) => {
 
-    Messages.find({conversationId: req.params.conversationId })
-        .sort('Date') 
-        .then((messages) => {
-            res.status(200).json({ status: 200, message: "Get Messages Success", data:  {messages}});
+    Conversation.findById({_id: req.params.conversationId})
+        .populate("members", "_id username name avatarUrl")
+        .select('-date -_id')
+        .then((conversation) => {
+            Messages.find({conversationId: req.params.conversationId})
+                .sort('Date')
+                .exec((err, messages) => {
+                    if(err) {
+                        return res.status(422).json({error: err});
+                    }
+
+                    res.status(200).json({status: 200, messages: "Success", data: {conversation, messages}});
+                })
         })
         .catch((err) => {
-            res.status(500).json({error: err});
+            return res.status(500).json({error: "Server Error"});
         })
 
 });
