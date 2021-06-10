@@ -142,7 +142,9 @@ router.get('/myPost', requireLogin, (req, res) => {
         .populate('postedBy', '_id name username avatarUrl')
         .populate("comments.postedBy", "_id name avatarUrl")
         .then((mypost) => {
-            res.status(200).json({status: 200, message: "Success", data: {mypost}});
+            const numberOfPosts = mypost.length;
+            
+            res.status(200).json({status: 200, message: "Success", data: {numberOfPosts, mypost}});
         })
         .catch((err) => {
             res.status(500).json({status: false, error: err});

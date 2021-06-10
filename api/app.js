@@ -30,11 +30,11 @@ mongoose.connection.on('error', (err) => {
     console.log('Error connecting!');
 });
 
-app.use(cors()); //Tương tác qua lại giữa client và server (như upload ảnh), bảo mật dự án
 app.use(bodyParser.json());//Kiểu dữ liệu muốn đọc từ người dùng gửi lên đc chuyển sang json
 app.use(bodyParser.urlencoded({ extended: true })); //chấp nhận mọi kiểu gửi về server
 
 //=> ĐÃ ĐƯỢC THAY THẾ BẰNG
+app.use(cors()); //Tương tác qua lại giữa client và server (như upload ảnh), bảo mật dự án
 app.use(express.json());//Kiểu dữ liệu muốn đọc từ người dùng gửi lên đc chuyển sang json
 app.use(express.urlencoded({extended: true}))
 
