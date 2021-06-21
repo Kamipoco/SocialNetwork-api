@@ -54,20 +54,6 @@ router.get('/allPost', requireLogin, async (req, res) => {
     }
 });
 
-//Hiển thị những bài đăng mà mình đã yêu thích
-// router.get('/likePost', requireLogin, (req, res) => {
-//     Post.find()
-//         .populate('postedBy', '_id name username avatarUrl')
-//         .populate("likes")
-//         .then( (posts, users) => {
-//             res.status(200).json({ status: 200, message: "Success", data:  {posts, users}})
-//         })
-//         .catch( (err) => {
-//             res.status(500).json({status: false, error: err});
-//         });
-// });
-
-
 //Chi tiết bài viết
 router.get('/post/:id', requireLogin, (req, res) => {  
     Post.findById({_id: req.params.id})

@@ -16,6 +16,11 @@ const PORT = 5000;
 const { MongoUrl } = require('./keys');
 const { remove } = require('./models/message');
 
+//Test socket
+const Conversation = require('./models/conversation');
+const Messages = require('./models/message');
+
+
 mongoose.set('useFindAndModify', false);
 
 mongoose.connect(MongoUrl,{
@@ -48,19 +53,6 @@ const addUser = async (userId, socketId) => {
     !users.some((user) => user.userId === userId) &&
     users.push({ userId, socketId });
     
-    // const user = users.find(user => user.userId === userId);
-
-    // if(user && user.socketId === socketId) {
-    //     return users
-    // } else {
-    //     if(user && user.socketId !== socketId) {
-    //         await removeUser(user.socketId);
-    //     }
-
-    //     const newUser = { userId, socketId };
-    //     users.push(newUser);
-    //     return users;
-    // }
 };
 
 //removeUser
@@ -88,14 +80,42 @@ io.on('connection', (socket) => {
 
     //Gửi và nhận message
     //receiverID lọc trong members có id khác với userId
-    socket.on('sendMessage', ({senderId, receiverId, msg}) => {
+    socket.on('sendMessage', ({senderId, receiverId, msg}) => {      
         const user = getUser(receiverId);
+        // console.log(user);
 
-        io.to(user.socketId).emit('getMessage', {
-            senderId,
-            msg
-        });
+        //Chia 2 trường hợp:
+        if(!user) { //TH1: nếu receiver đang không online thì chúng ta sẽ gửi cái thông tin đó đi và lưu vào Db xử lý thông qua server
+                    //Khi nào user đó online thì sẽ nhận socket và getMsg
+
+            console.log("Đối phương đã Offline");
+        } else { //TH2: Nếu receiver online thì gửi trực tiếp tới socketId đó cái thông tin cuộc hội thoại
+            io.to(user.socketId).emit('getMessage', {
+                senderId,
+                msg
+            });
+        }
+
+        // io.to(user.socketId).emit('getMessage', {
+        //     senderId,
+        //     msg
+        // });
     }); 
+
+
+    // //Chat message
+    // socket.on('sendMessage', ({senderId, receiverId, msg}) => {
+    //     console.log("message: " + msg);
+
+    // let  chatMessage  =  new Messages({
+    //     senderId: senderId,
+    //     msg: msg,
+    //     Date: Date.now()
+    // });
+
+    // chatMessage.save();
+    // });
+
     
     //Offline
     socket.on('disconnect', (res) => {
