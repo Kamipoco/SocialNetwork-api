@@ -127,6 +127,7 @@ router.get('/myPost', requireLogin, (req, res) => {
     Post.find({postedBy: req.user._id})
         .populate('postedBy', '_id name username avatarUrl')
         .populate("comments.postedBy", "_id name avatarUrl")
+        .sort('-createdAt')
         .then((mypost) => {
             const numberOfPosts = mypost.length;
             
