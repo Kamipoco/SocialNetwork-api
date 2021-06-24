@@ -12,15 +12,15 @@ const { request } = require('express');
 const { result } = require('underscore');
 // const path = require('path');
 
-function getUsers(res) {                             //Chú ý khi get tất cả thì dữ liệu trả về là 1 mảng or 1 mảng gồm các object
-                                                    //Còn lấy chi tiết từng cái thì dữ liệu trả về là 1 object
+function getUsers(res) {                                                                                //Chú ý khi get tất cả thì dữ liệu trả về là 1 mảng or 1 mảng gồm các object
+                                                                                                //Còn lấy chi tiết từng cái thì dữ liệu trả về là 1 object
     User.find( (err, users) => {
         if(err) {
             res.status(500).json(err);
         } else {
             res.status(200).json({status: 200, message: "Success", data: {users}});
         }
-    }).select("-password"); //ko lấy password khi get infor user
+    }).select("-password");
 }
 
 //Lấy tất cả user
@@ -57,6 +57,7 @@ router.get('/users/:username', requireLogin, async (req, res) => {
         Post.find({postedBy: idUsername})
         .populate('postedBy', '_id name username avatarUrl') 
         .populate("comments.postedBy", "_id name avatarUrl")
+        .sort('-createdAt')
         .then((posts) => {
             res.status(200).json({status: 200, message: "Success", data: {user, posts}});
         }).catch((err) => {
